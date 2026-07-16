@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TM-Investments | Trading Panel</title>
+  <style>
+    :root {
+      --fondo-1: #07111f;
+      --fondo-2: #10213a;
+      --navy: #10294a;
+      --navy-2: #1b3f68;
+      --gold: #d2a43a;
+      --gold-light: #f1d37a;
+      --line: rgba(241, 211, 122, 0.24);
+      --text: #f8fafc;
+      --muted: #d7e0ed;
+      --green: #3f9b48;
+      --red: #d94141;
+      --amber: #d2a43a;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(210, 164, 58, 0.20), transparent 30%),
+        radial-gradient(circle at top right, rgba(27, 63, 104, 0.55), transparent 38%),
+        linear-gradient(135deg, var(--fondo-1), var(--fondo-2) 52%, #07111f);
+      padding: 28px;
+    }
+
+    .app {
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      background:
+        linear-gradient(145deg, rgba(255,255,255,0.10), rgba(255,255,255,0.045)),
+        linear-gradient(135deg, rgba(210, 164, 58, 0.07), rgba(16, 41, 74, 0.12));
+      backdrop-filter: blur(16px);
+      border-radius: 24px;
+      box-shadow: 0 24px 70px rgba(0,0,0,0.30);
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 22px;
+    }
+
+    .hero {
+      padding: 26px;
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 22px;
+      align-items: center;
+      background:
+        linear-gradient(135deg, rgba(16, 41, 74, 0.92), rgba(20, 42, 70, 0.72)),
+        radial-gradient(circle at top right, rgba(210, 164, 58, 0.18), transparent 42%);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .logo {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 18px 46px rgba(0,0,0,0.20);
+      z-index: 1;
+      background: linear-gradient(135deg, var(--gold), var(--navy));
+      font-size: 40px;
+      font-weight: bold;
+    }
+
+    .hero-text {
+      z-index: 1;
+    }
+
+    .eyebrow {
+      color: var(--gold-light);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-size: 12px;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      font-size: clamp(24px, 3vw, 36px);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    h2 {
+      font-size: 18px;
+      margin-bottom: 14px;
+    }
+
+    p {
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 13px;
+      margin-bottom: 14px;
+    }
+
+    .summary {
+      padding: 22px;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .metric {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 18px;
+      padding: 14px;
+    }
+
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      margin-bottom: 6px;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 20px;
+    }
+
+    .section {
+      padding: 22px;
+      margin-bottom: 22px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      align-items: end;
+      margin-bottom: 14px;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    input,
+    select,
+    button,
+    textarea {
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 14px;
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.09);
+      color: var(--text);
+      outline: none;
+      width: 100%;
+      font-size: 13px;
+    }
+
+    select option {
+      color: #111827;
+    }
+
+    button {
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--gold), var(--navy));
+      border: 0;
+      color: white;
+      font-weight: 700;
+      padding: 10px 14px;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, var(--red), #8b2e2e);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, var(--green), #2d6a32);
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .toolbar button {
+      width: auto;
+      min-width: 120px;
+    }
+
+    .chip {
+      display: inline-block;
+      padding: 8px 12px;
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 20px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .chip.active {
+      background: rgba(210, 164, 58, 0.20);
+      border-color: var(--gold);
+      color: var(--gold-light);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    th {
+      text-align: left;
+      padding: 12px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-weight: 500;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    td {
+      padding: 12px;
+      border-bottom: 1px solid rgba(241, 211, 122, 0.12);
+    }
+
+    tr:hover {
+      background: rgba(255,255,255,0.04);
+    }
+
+    tr.closed {
+      opacity: 0.6;
+      background: rgba(217, 65, 65, 0.08);
+    }
+
+    .ticker-cell {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .dot.green {
+      background: var(--green);
+    }
+
+    .dot.red {
+      background: var(--red);
+    }
+
+    .dot.gray {
+      background: #888;
+    }
+
+    .positive {
+      color: var(--green);
+      font-weight: 600;
+    }
+
+    .negative {
+      color: var(--red);
+      font-weight: 600;
+    }
+
+    .neutral {
+      color: var(--muted);
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .status-open {
+      background: rgba(63, 155, 72, 0.2);
+      color: var(--green);
+    }
+
+    .status-closed {
+      background: rgba(217, 65, 65, 0.2);
+      color: var(--red);
+    }
+
+    .status-sold {
+      background: rgba(210, 164, 58, 0.2);
+      color: var(--gold-light);
+    }
+
+    .actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .actions button {
+      width: auto;
+      min-width: 70px;
+      padding: 6px 8px;
+      font-size: 10px;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      place-items: center;
+    }
+
+    .modal.active {
+      display: grid;
+    }
+
+    .modal-content {
+      background: linear-gradient(135deg, rgba(16, 41, 74, 0.95), rgba(20, 42, 70, 0.85));
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 24px;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 24px 70px rgba(0,0,0,0.50);
+    }
+
+    .modal-content h3 {
+      margin-bottom: 16px;
+      font-size: 18px;
+    }
+
+    .modal-content label {
+      margin-bottom: 12px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .modal-actions button {
+      flex: 1;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-right: 6px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .alert {
+      padding: 12px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      font-size: 12px;
+    }
+
+    .alert-error {
+      background: rgba(217, 65, 65, 0.2);
+      border: 1px solid rgba(217, 65, 65, 0.5);
+      color: #ff9999;
+    }
+
+    .alert-success {
+      background: rgba(63, 155, 72, 0.2);
+      border: 1px solid rgba(63, 155, 72, 0.5);
+      color: #99ff99;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="card hero">
+        <div class="logo">📊</div>
+        <div class="hero-text">
+          <div class="eyebrow">Trading Panel</div>
+          <h1>TM-Investments</h1>
+          <p>Tracker de trades con precios en tiempo real</p>
+        </div>
+      </div>
+
+      <div class="card summary">
+        <div class="metrics">
+          <div class="metric">
+            <span>Trades abiertos</span>
+            <strong id="openTrades">0</strong>
+          </div>
+          <div class="metric">
+            <span>Rentabilidad promedio</span>
+            <strong id="avgProfit" class="neutral">0%</strong>
+          </div>
+          <div class="metric">
+            <span>Trades cerrados</span>
+            <strong id="closedTrades">0</strong>
+          </div>
+          <div class="metric">
+            <span>Rentabilidad realizada</span>
+            <strong id="realizedProfit" class="neutral">0%</strong>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="card section">
+      <h2>Nuevo Trade</h2>
+      <form id="addTradeForm" class="form-grid">
+        <label>
+          Ticker
+          <input type="text" id="ticker" placeholder="ej: AAPL" required />
+        </label>
+        <label>
+          Precio Entrada ($)
+          <input type="number" id="entryPrice" placeholder="0.00" step="0.01" required />
+        </label>
+        <label>
+          Stop Loss ($)
+          <input type="number" id="stopLoss" placeholder="0.00" step="0.01" required />
+        </label>
+        <label>
+          Fecha/Hora
+          <input type="datetime-local" id="tradeDate" required />
+        </label>
+        <button type="submit">Abrir Trade</button>
+      </form>
+      <div id="alertContainer"></div>
+    </div>
+
+    <div class="card section">
+      <div class="toolbar">
+        <button onclick="updateAll()">
+          <span id="updateSpinner" class="hidden spinner"></span>
+          Actualizar precios
+        </button>
+        <button class="btn-secondary" id="autoBtn" onclick="toggleAutoRefresh()">Activar autoactualización</button>
+        <span class="chip" id="autoChip">Auto: pausado</span>
+        <span class="chip">Última actualización: <span id="lastUpdate">nunca</span></span>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Ticker</th>
+            <th>Entrada</th>
+            <th>Precio Actual</th>
+            <th>Rentabilidad</th>
+            <th>Stop Loss</th>
+            <th>Estado</th>
+            <th>Fecha Entrada</th>
+            <th>Precio Venta</th>
+            <th>Rentabilidad Final</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tradesBody">
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="sellModal" class="modal">
+    <div class="modal-content">
+      <h3>Vender Trade</h3>
+      <label>
+        Precio de venta ($)
+        <input type="number" id="sellPrice" placeholder="0.00" step="0.01" />
+      </label>
+      <div class="modal-actions">
+        <button type="button" class="btn-success" onclick="confirmSell()">Confirmar</button>
+        <button type="button" class="btn-secondary" onclick="closeSellModal()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "tm_trades";
+    const REFRESH_MINUTES = 5;
+    const REFRESH_MS = REFRESH_MINUTES * 60 * 1000;
+    
+    const BACKEND_URL = "https://YOUR_VERCEL_URL.vercel.app/api/precios";
+
+    let trades = [];
+    let autoRefresh = false;
+    let refreshTimer = null;
+    let selectedTradeIndex = null;
+
+    function loadState() {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      trades = stored ? JSON.parse(stored) : [];
+      autoRefresh = localStorage.getItem("tm_auto_refresh") === "true";
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(trades));
+    }
+
+    async function getPrice(ticker) {
+      try {
+        const response = await fetch(`${BACKEND_URL}?ticker=${encodeURIComponent(ticker)}`, {
+          cache: "no-store"
+        });
+        
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        
+        const data = await response.json();
+        if (!data.price) throw new Error("Sin precio");
+        
+        return data.price;
+      } catch (error) {
+        console.error(`Error obteniendo precio de ${ticker}:`, error);
+        throw error;
+      }
+    }
+
+    function calculateProfit(entryPrice, currentPrice) {
+      if (!currentPrice || !entryPrice) return null;
+      return ((currentPrice - entryPrice) / entryPrice) * 100;
+    }
+
+    function isSLHit(entryPrice, currentPrice, stopLoss) {
+      if (!currentPrice || !stopLoss) return false;
+      return currentPrice <= stopLoss;
+    }
+
+    function getTradeStatus(trade) {
+      if (trade.soldPrice) return "sold";
+      if (trade.slHit) return "closed";
+      return "open";
+    }
+
+    document.getElementById("addTradeForm").addEventListener("submit", async function(event) {
+      event.preventDefault();
+
+      const ticker = document.getElementById("ticker").value.toUpperCase();
+      const entryPrice = parseFloat(document.getElementById("entryPrice").value);
+      const stopLoss = parseFloat(document.getElementById("stopLoss").value);
+      const tradeDate = document.getElementById("tradeDate").value;
+
+      if (!ticker || !entryPrice || !stopLoss || !tradeDate) {
+        showAlert("Rellena todos los campos", "error");
+        return;
+      }
+
+      if (stopLoss >= entryPrice) {
+        showAlert("Stop Loss debe ser menor que el precio de entrada", "error");
+        return;
+      }
+
+      try {
+        const currentPrice = await getPrice(ticker);
+
+        const trade = {
+          id: Date.now(),
+          ticker,
+          entryPrice,
+          stopLoss,
+          tradeDate,
+          currentPrice,
+          soldPrice: null,
+          finalProfit: null,
+          slHit: false,
+          createdAt: new Date().toLocaleString("es-ES")
+        };
+
+        trades.push(trade);
+        saveState();
+        renderTrades();
+
+        this.reset();
+        showAlert(`Trade ${ticker} abierto`, "success");
+      } catch (error) {
+        showAlert(`Error obteniendo precio: ${error.message}`, "error");
+      }
+    });
+
+    function renderTrades() {
+      const tbody = document.getElementById("tradesBody");
+      tbody.innerHTML = "";
+
+      trades.forEach((trade, index) => {
+        const profit = calculateProfit(trade.entryPrice, trade.currentPrice);
+        const status = getTradeStatus(trade);
+        const slHit = isSLHit(trade.entryPrice, trade.currentPrice, trade.stopLoss);
+
+        if (slHit && !trade.slHit) {
+          trade.slHit = true;
+          trade.finalProfit = calculateProfit(trade.entryPrice, trade.stopLoss);
+          saveState();
+        }
+
+        const row = document.createElement("tr");
+        if (status !== "open") row.classList.add("closed");
+
+        const profitClass = profit !== null ? (profit >= 0 ? "positive" : "negative") : "neutral";
+        const finalProfitClass = trade.finalProfit !== null ? (trade.finalProfit >= 0 ? "positive" : "negative") : "neutral";
+
+        row.innerHTML = `
+          <td>
+            <div class="ticker-cell">
+              <span class="dot ${status === "open" && !slHit ? "green" : (status === "closed" ? "red" : "gray")}"></span>
+              ${trade.ticker}
+            </div>
+          </td>
+          <td>$${trade.entryPrice.toFixed(2)}</td>
+          <td>$${trade.currentPrice ? trade.currentPrice.toFixed(2) : "—"}</td>
+          <td class="${profitClass}">${profit !== null ? (profit >= 0 ? "+" : "") + profit.toFixed(2) + "%" : "—"}</td>
+          <td>$${trade.stopLoss.toFixed(2)}</td>
+          <td>
+            ${status === "open" && !slHit ? 
+              '<span class="status-badge status-open">Abierto</span>' :
+              (status === "closed" ? 
+                '<span class="status-badge status-closed">SL Hit</span>' :
+                '<span class="status-badge status-sold">Vendida</span>')
+            }
+          </td>
+          <td>${new Date(trade.tradeDate).toLocaleString("es-ES")}</td>
+          <td>${trade.soldPrice ? "$" + trade.soldPrice.toFixed(2) : "—"}</td>
+          <td class="${trade.finalProfit !== null ? finalProfitClass : "neutral"}">${trade.finalProfit !== null ? (trade.finalProfit >= 0 ? "+" : "") + trade.finalProfit.toFixed(2) + "%" : "—"}</td>
+          <td>
+            <div class="actions">
+              ${status === "open" && !slHit ? 
+                `<button class="btn-success" onclick="openSellModal(${index})">Vender</button>` :
+                ""}
+              <button class="btn-danger" onclick="deleteTrade(${index})">Borrar</button>
+            </div>
+          </td>
+        `;
+
+        tbody.appendChild(row);
+      });
+
+      updateSummary();
+    }
+
+    function updateSummary() {
+      const openCount = trades.filter(t => getTradeStatus(t) === "open" && !t.slHit).length;
+      const closedCount = trades.filter(t => getTradeStatus(t) !== "open").length;
+
+      const openProfits = trades
+        .filter(t => getTradeStatus(t) === "open" && !t.slHit && t.currentPrice)
+        .map(t => calculateProfit(t.entryPrice, t.currentPrice));
+
+      const avgProfit = openProfits.length > 0 
+        ? openProfits.reduce((a, b) => a + b, 0) / openProfits.length 
+        : 0;
+
+      const realizedProfits = trades
+        .filter(t => t.finalProfit !== null)
+        .map(t => t.finalProfit);
+
+      const realizedProfit = realizedProfits.length > 0 
+        ? realizedProfits.reduce((a, b) => a + b, 0) / realizedProfits.length 
+        : 0;
+
+      document.getElementById("openTrades").textContent = openCount;
+      document.getElementById("closedTrades").textContent = closedCount;
+
+      const avgElem = document.getElementById("avgProfit");
+      avgElem.textContent = (avgProfit >= 0 ? "+" : "") + avgProfit.toFixed(2) + "%";
+      avgElem.className = avgProfit >= 0 ? "positive" : "negative";
+
+      const realElem = document.getElementById("realizedProfit");
+      realElem.textContent = (realizedProfit >= 0 ? "+" : "") + realizedProfit.toFixed(2) + "%";
+      realElem.className = realizedProfit >= 0 ? "positive" : "negative";
+    }
+
+    async function updateAll() {
+      if (!trades.length) return;
+
+      document.getElementById("updateSpinner").classList.remove("hidden");
+
+      for (let i = 0; i < trades.length; i++) {
+        try {
+          const price = await getPrice(trades[i].ticker);
+          trades[i].currentPrice = price;
+        } catch (error) {
+          console.error(`No se pudo actualizar ${trades[i].ticker}`);
+        }
+      }
+
+      saveState();
+      renderTrades();
+      document.getElementById("updateSpinner").classList.add("hidden");
+      document.getElementById("lastUpdate").textContent = new Date().toLocaleString("es-ES");
+    }
+
+    function openSellModal(index) {
+      selectedTradeIndex = index;
+      document.getElementById("sellPrice").value = "";
+      document.getElementById("sellModal").classList.add("active");
+    }
+
+    function closeSellModal() {
+      document.getElementById("sellModal").classList.remove("active");
+      selectedTradeIndex = null;
+    }
+
+    function confirmSell() {
+      if (selectedTradeIndex === null) return;
+
+      const sellPrice = parseFloat(document.getElementById("sellPrice").value);
+      if (!sellPrice || sellPrice <= 0) {
+        showAlert("Ingresa un precio de venta válido", "error");
+        return;
+      }
+
+      const trade = trades[selectedTradeIndex];
+      trade.soldPrice = sellPrice;
+      trade.finalProfit = calculateProfit(trade.entryPrice, sellPrice);
+
+      saveState();
+      renderTrades();
+      closeSellModal();
+      showAlert(`Trade ${trade.ticker} vendida`, "success");
+    }
+
+    function deleteTrade(index) {
+      const trade = trades[index];
+      if (!confirm(`¿Borrar trade ${trade.ticker}?`)) return;
+
+      trades.splice(index, 1);
+      saveState();
+      renderTrades();
+    }
+
+    function ahoraEnNuevaYork() {
+      return new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
+    }
+
+    function mercadoUSAAbierto() {
+      const ny = ahoraEnNuevaYork();
+      const dia = ny.getDay();
+
+      if (dia === 0 || dia === 6) return false;
+
+      const minutos = ny.getHours() * 60 + ny.getMinutes();
+      const apertura = 9 * 60 + 30;
+      const cierre = 16 * 60;
+
+      return minutos >= apertura && minutos < cierre;
+    }
+
+    function toggleAutoRefresh() {
+      autoRefresh = !autoRefresh;
+      const btn = document.getElementById("autoBtn");
+
+      if (autoRefresh) {
+        btn.textContent = "Pausar autoactualización";
+        startAutoRefresh();
+      } else {
+        btn.textContent = "Activar autoactualización";
+        if (refreshTimer) clearInterval(refreshTimer);
+        refreshTimer = null;
+        document.getElementById("autoChip").textContent = "Auto: pausado";
+      }
+
+      localStorage.setItem("tm_auto_refresh", autoRefresh);
+    }
+
+    function startAutoRefresh() {
+      if (refreshTimer) clearInterval(refreshTimer);
+
+      const updateIfMarketOpen = async () => {
+        if (mercadoUSAAbierto()) {
+          await updateAll();
+        }
+      };
+
+      updateIfMarketOpen();
+      refreshTimer = setInterval(updateIfMarketOpen, REFRESH_MS);
+    }
+
+    function showAlert(message, type) {
+      const container = document.getElementById("alertContainer");
+      const alert = document.createElement("div");
+      alert.className = `alert alert-${type}`;
+      alert.textContent = message;
+      container.appendChild(alert);
+
+      setTimeout(() => alert.remove(), 3000);
+    }
+
+    loadState();
+    renderTrades();
+    if (autoRefresh) startAutoRefresh();
+
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    document.getElementById("tradeDate").value = now.toISOString().slice(0, 16);
+
+    document.getElementById("sellModal").addEventListener("click", function(e) {
+      if (e.target === this) closeSellModal();
+    });
+  </script>
+</body>
+</html>
