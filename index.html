@@ -167,8 +167,7 @@
 
     input,
     select,
-    button,
-    textarea {
+    button {
       border: 1px solid rgba(255,255,255,0.16);
       border-radius: 14px;
       padding: 10px 12px;
@@ -211,19 +210,6 @@
       background: linear-gradient(135deg, var(--green), #2d6a32);
     }
 
-    .toolbar {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      align-items: center;
-      margin-bottom: 18px;
-    }
-
-    .toolbar button {
-      width: auto;
-      min-width: 120px;
-    }
-
     .chip {
       display: inline-block;
       padding: 8px 12px;
@@ -232,12 +218,6 @@
       border-radius: 20px;
       font-size: 11px;
       color: var(--muted);
-    }
-
-    .chip.active {
-      background: rgba(210, 164, 58, 0.20);
-      border-color: var(--gold);
-      color: var(--gold-light);
     }
 
     table {
@@ -392,25 +372,6 @@
       flex: 1;
     }
 
-    .hidden {
-      display: none;
-    }
-
-    .spinner {
-      display: inline-block;
-      width: 12px;
-      height: 12px;
-      border: 2px solid rgba(255,255,255,0.3);
-      border-top-color: var(--gold);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin-right: 6px;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
     .alert {
       padding: 12px;
       border-radius: 12px;
@@ -439,7 +400,7 @@
         <div class="hero-text">
           <div class="eyebrow">Trading Panel</div>
           <h1>TM-Investments</h1>
-          <p>Tracker de trades con precios en tiempo real</p>
+          <p>Tracker de trades - Precios manuales</p>
         </div>
       </div>
 
@@ -490,14 +451,8 @@
     </div>
 
     <div class="card section">
-      <div class="toolbar">
-        <button onclick="updateAll()">
-          <span id="updateSpinner" class="hidden spinner"></span>
-          Actualizar precios
-        </button>
-        <button class="btn-secondary" id="autoBtn" onclick="toggleAutoRefresh()">Activar autoactualización</button>
-        <span class="chip" id="autoChip">Auto: pausado</span>
-        <span class="chip">Última actualización: <span id="lastUpdate">nunca</span></span>
+      <div style="margin-bottom: 18px;">
+        <span class="chip">✅ Sin APIs externas - Todo funciona offline</span>
       </div>
 
       <table>
@@ -521,6 +476,20 @@
     </div>
   </div>
 
+  <div id="priceModal" class="modal">
+    <div class="modal-content">
+      <h3>Actualizar Precio</h3>
+      <label>
+        Precio actual ($)
+        <input type="number" id="currentPrice" placeholder="0.00" step="0.01" />
+      </label>
+      <div class="modal-actions">
+        <button type="button" class="btn-success" onclick="confirmPrice()">Actualizar</button>
+        <button type="button" class="btn-secondary" onclick="closePriceModal()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
   <div id="sellModal" class="modal">
     <div class="modal-content">
       <h3>Vender Trade</h3>
@@ -537,42 +506,16 @@
 
   <script>
     const STORAGE_KEY = "tm_trades";
-    const REFRESH_MINUTES = 5;
-    const REFRESH_MS = REFRESH_MINUTES * 60 * 1000;
-    
-    const BACKEND_URL = "https://grupochuki.vercel.app/api/precios";
-
     let trades = [];
-    let autoRefresh = false;
-    let refreshTimer = null;
     let selectedTradeIndex = null;
 
     function loadState() {
       const stored = localStorage.getItem(STORAGE_KEY);
       trades = stored ? JSON.parse(stored) : [];
-      autoRefresh = localStorage.getItem("tm_auto_refresh") === "true";
     }
 
     function saveState() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(trades));
-    }
-
-    async function getPrice(ticker) {
-      try {
-        const response = await fetch(`${BACKEND_URL}?ticker=${encodeURIComponent(ticker)}`, {
-          cache: "no-store"
-        });
-        
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        
-        const data = await response.json();
-        if (!data.price) throw new Error("Sin precio");
-        
-        return data.price;
-      } catch (error) {
-        console.error(`Error obteniendo precio de ${ticker}:`, error);
-        throw error;
-      }
     }
 
     function calculateProfit(entryPrice, currentPrice) {
@@ -580,7 +523,7 @@
       return ((currentPrice - entryPrice) / entryPrice) * 100;
     }
 
-    function isSLHit(entryPrice, currentPrice, stopLoss) {
+    function isSLHit(currentPrice, stopLoss) {
       if (!currentPrice || !stopLoss) return false;
       return currentPrice <= stopLoss;
     }
@@ -591,7 +534,7 @@
       return "open";
     }
 
-    document.getElementById("addTradeForm").addEventListener("submit", async function(event) {
+    document.getElementById("addTradeForm").addEventListener("submit", function(event) {
       event.preventDefault();
 
       const ticker = document.getElementById("ticker").value.toUpperCase();
@@ -609,31 +552,25 @@
         return;
       }
 
-      try {
-        const currentPrice = await getPrice(ticker);
+      const trade = {
+        id: Date.now(),
+        ticker,
+        entryPrice,
+        stopLoss,
+        tradeDate,
+        currentPrice: null,
+        soldPrice: null,
+        finalProfit: null,
+        slHit: false,
+        createdAt: new Date().toLocaleString("es-ES")
+      };
 
-        const trade = {
-          id: Date.now(),
-          ticker,
-          entryPrice,
-          stopLoss,
-          tradeDate,
-          currentPrice,
-          soldPrice: null,
-          finalProfit: null,
-          slHit: false,
-          createdAt: new Date().toLocaleString("es-ES")
-        };
+      trades.push(trade);
+      saveState();
+      renderTrades();
 
-        trades.push(trade);
-        saveState();
-        renderTrades();
-
-        this.reset();
-        showAlert(`Trade ${ticker} abierto`, "success");
-      } catch (error) {
-        showAlert(`Error obteniendo precio: ${error.message}`, "error");
-      }
+      this.reset();
+      showAlert(`Trade ${ticker} abierto`, "success");
     });
 
     function renderTrades() {
@@ -643,7 +580,7 @@
       trades.forEach((trade, index) => {
         const profit = calculateProfit(trade.entryPrice, trade.currentPrice);
         const status = getTradeStatus(trade);
-        const slHit = isSLHit(trade.entryPrice, trade.currentPrice, trade.stopLoss);
+        const slHit = isSLHit(trade.currentPrice, trade.stopLoss);
 
         if (slHit && !trade.slHit) {
           trade.slHit = true;
@@ -665,7 +602,11 @@
             </div>
           </td>
           <td>$${trade.entryPrice.toFixed(2)}</td>
-          <td>$${trade.currentPrice ? trade.currentPrice.toFixed(2) : "—"}</td>
+          <td>
+            <button class="btn-secondary" style="width: 100px; padding: 4px; font-size: 10px;" onclick="openPriceModal(${index})">
+              ${trade.currentPrice ? "$" + trade.currentPrice.toFixed(2) : "Actualizar"}
+            </button>
+          </td>
           <td class="${profitClass}">${profit !== null ? (profit >= 0 ? "+" : "") + profit.toFixed(2) + "%" : "—"}</td>
           <td>$${trade.stopLoss.toFixed(2)}</td>
           <td>
@@ -727,24 +668,31 @@
       realElem.className = realizedProfit >= 0 ? "positive" : "negative";
     }
 
-    async function updateAll() {
-      if (!trades.length) return;
+    function openPriceModal(index) {
+      selectedTradeIndex = index;
+      document.getElementById("currentPrice").value = trades[index].currentPrice || "";
+      document.getElementById("priceModal").classList.add("active");
+    }
 
-      document.getElementById("updateSpinner").classList.remove("hidden");
+    function closePriceModal() {
+      document.getElementById("priceModal").classList.remove("active");
+      selectedTradeIndex = null;
+    }
 
-      for (let i = 0; i < trades.length; i++) {
-        try {
-          const price = await getPrice(trades[i].ticker);
-          trades[i].currentPrice = price;
-        } catch (error) {
-          console.error(`No se pudo actualizar ${trades[i].ticker}`);
-        }
+    function confirmPrice() {
+      if (selectedTradeIndex === null) return;
+
+      const price = parseFloat(document.getElementById("currentPrice").value);
+      if (!price || price <= 0) {
+        showAlert("Ingresa un precio válido", "error");
+        return;
       }
 
+      trades[selectedTradeIndex].currentPrice = price;
       saveState();
       renderTrades();
-      document.getElementById("updateSpinner").classList.add("hidden");
-      document.getElementById("lastUpdate").textContent = new Date().toLocaleString("es-ES");
+      closePriceModal();
+      showAlert("Precio actualizado", "success");
     }
 
     function openSellModal(index) {
@@ -786,53 +734,6 @@
       renderTrades();
     }
 
-    function ahoraEnNuevaYork() {
-      return new Date(new Date().toLocaleString("en-US", { timeZone: "America/New_York" }));
-    }
-
-    function mercadoUSAAbierto() {
-      const ny = ahoraEnNuevaYork();
-      const dia = ny.getDay();
-
-      if (dia === 0 || dia === 6) return false;
-
-      const minutos = ny.getHours() * 60 + ny.getMinutes();
-      const apertura = 9 * 60 + 30;
-      const cierre = 16 * 60;
-
-      return minutos >= apertura && minutos < cierre;
-    }
-
-    function toggleAutoRefresh() {
-      autoRefresh = !autoRefresh;
-      const btn = document.getElementById("autoBtn");
-
-      if (autoRefresh) {
-        btn.textContent = "Pausar autoactualización";
-        startAutoRefresh();
-      } else {
-        btn.textContent = "Activar autoactualización";
-        if (refreshTimer) clearInterval(refreshTimer);
-        refreshTimer = null;
-        document.getElementById("autoChip").textContent = "Auto: pausado";
-      }
-
-      localStorage.setItem("tm_auto_refresh", autoRefresh);
-    }
-
-    function startAutoRefresh() {
-      if (refreshTimer) clearInterval(refreshTimer);
-
-      const updateIfMarketOpen = async () => {
-        if (mercadoUSAAbierto()) {
-          await updateAll();
-        }
-      };
-
-      updateIfMarketOpen();
-      refreshTimer = setInterval(updateIfMarketOpen, REFRESH_MS);
-    }
-
     function showAlert(message, type) {
       const container = document.getElementById("alertContainer");
       const alert = document.createElement("div");
@@ -845,11 +746,14 @@
 
     loadState();
     renderTrades();
-    if (autoRefresh) startAutoRefresh();
 
     const now = new Date();
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
     document.getElementById("tradeDate").value = now.toISOString().slice(0, 16);
+
+    document.getElementById("priceModal").addEventListener("click", function(e) {
+      if (e.target === this) closePriceModal();
+    });
 
     document.getElementById("sellModal").addEventListener("click", function(e) {
       if (e.target === this) closeSellModal();
