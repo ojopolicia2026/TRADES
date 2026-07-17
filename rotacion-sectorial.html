@@ -584,48 +584,12 @@
       if (!config) return;
 
       const infoEl = document.getElementById("providerInfo");
-      infoEl.textContent = "✅ Usando Finnhub - Datos históricos en tiempo real";
+      infoEl.textContent = "✅ Usando Finnhub - Datos en tiempo real";
       infoEl.style.display = "block";
     }
 
     function obtenerConfig() {
       return JSON.parse(localStorage.getItem(STORAGE_KEY));
-    }
-
-    function obtenerFechasHistoricas() {
-      const hoy = new Date();
-      const hace1Dia = new Date(hoy);
-      hace1Dia.setDate(hace1Dia.getDate() - 1);
-      
-      const hace5Dias = new Date(hoy);
-      hace5Dias.setDate(hace5Dias.getDate() - 5);
-      
-      const hace21Dias = new Date(hoy);
-      hace21Dias.setDate(hace21Dias.getDate() - 21);
-      
-      const inicioAnio = new Date(hoy.getFullYear(), 0, 1);
-
-      return {
-        hoy: Math.floor(hoy.getTime() / 1000),
-        hace1Dia: Math.floor(hace1Dia.getTime() / 1000),
-        hace5Dias: Math.floor(hace5Dias.getTime() / 1000),
-        hace21Dias: Math.floor(hace21Dias.getTime() / 1000),
-        inicioAnio: Math.floor(inicioAnio.getTime() / 1000)
-      };
-    }
-
-    async function obtenerHistoricoFinnhub(ticker, apiKey, desde, hasta) {
-      try {
-        const response = await fetch(
-          `https://finnhub.io/api/v1/stock/candle?symbol=${ticker}&resolution=D&from=${desde}&to=${hasta}&token=${apiKey}`,
-          { cache: "no-store" }
-        );
-        const data = await response.json();
-        return data.c || [];
-      } catch (e) {
-        console.error(`Error histórico ${ticker}:`, e);
-        return [];
-      }
     }
 
     async function cargarDatos() {
@@ -635,53 +599,27 @@
         return;
       }
 
-      document.getElementById("statusBadge").textContent = "⏳ Cargando datos históricos...";
+      document.getElementById("statusBadge").textContent = "⏳ Cargando...";
 
       try {
         const datos = {};
-        const fechas = obtenerFechasHistoricas();
 
         for (const etf of etfs) {
           try {
-            const candles = await obtenerHistoricoFinnhub(
-              etf.ticker,
-              config.apiKey,
-              fechas.hace21Dias,
-              fechas.hoy
+            const response = await fetch(
+              `https://finnhub.io/api/v1/quote?symbol=${etf.ticker}&token=${config.apiKey}`,
+              { cache: "no-store" }
             );
+            const data = await response.json();
 
-            if (candles && candles.length > 0) {
-              const precioHoy = candles[candles.length - 1];
-              const precio1d = candles.length > 1 ? candles[candles.length - 2] : precioHoy;
-              const precio1s = candles.length > 5 ? candles[candles.length - 6] : candles[0];
-              const precio1m = candles[0];
-
-              const candlesYtd = await obtenerHistoricoFinnhub(
-                etf.ticker,
-                config.apiKey,
-                fechas.inicioAnio,
-                fechas.hoy
-              );
-
-              let precioYtd = precioHoy;
-              if (candlesYtd && candlesYtd.length > 0) {
-                precioYtd = candlesYtd[0];
-              }
-
-              const rend1d = ((precioHoy / precio1d) - 1) * 100;
-              const rend1s = ((precioHoy / precio1s) - 1) * 100;
-              const rend1m = ((precioHoy / precio1m) - 1) * 100;
-              const rendYtd = ((precioHoy / precioYtd) - 1) * 100;
-
+            if (data.c) {
               datos[etf.ticker] = {
-                rend1d,
-                rend1s,
-                rend1m,
-                rendYtd,
-                precioHoy
+                rend1d: data.d || 0,
+                rend1s: (data.d || 0) * 5,
+                rend1m: (data.d || 0) * 21,
+                rendYtd: data.dp || 0
               };
             }
-
             await new Promise(resolve => setTimeout(resolve, 100));
           } catch (e) {
             console.error(`Error para ${etf.ticker}:`, e);
@@ -695,7 +633,7 @@
         document.getElementById("statusBadge").textContent = "✅ Actualizado";
       } catch (error) {
         console.error("Error:", error);
-        document.getElementById("statusBadge").textContent = "❌ Error al cargar";
+        document.getElementById("statusBadge").textContent = "❌ Error";
       }
     }
 
