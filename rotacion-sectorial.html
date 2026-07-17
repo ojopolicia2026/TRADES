@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rotación Sectorial ETF | TM-Investments</title>
+  <style>
+    :root {
+      --bg-primary: #f8f9fa;
+      --bg-secondary: #e9ecef;
+      --bg-tertiary: #dee2e6;
+      --text-primary: #212529;
+      --text-secondary: #6c757d;
+      --border-color: #dee2e6;
+      --green: #28a745;
+      --red: #dc3545;
+      --gold: #ffc107;
+      --blue: #007bff;
+      --gray-subsector: #e8eef5;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      color: var(--text-primary);
+      background: var(--bg-primary);
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 100%;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    h1 {
+      font-size: 32px;
+      margin-bottom: 10px;
+      color: var(--text-primary);
+    }
+
+    .subtitle {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    .setup-card {
+      background: white;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .setup-card h3 {
+      margin-bottom: 15px;
+      color: var(--text-primary);
+      font-size: 16px;
+    }
+
+    .setup-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .setup-field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .setup-field label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .setup-field input {
+      padding: 10px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      background: white;
+      color: var(--text-primary);
+      font-size: 13px;
+    }
+
+    .setup-field input:focus {
+      outline: none;
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+    }
+
+    .setup-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 10px 20px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      background: white;
+      color: var(--text-primary);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      text-transform: uppercase;
+      transition: all 0.2s;
+    }
+
+    button:hover {
+      background: var(--bg-secondary);
+    }
+
+    .btn-primary {
+      background: var(--blue);
+      color: white;
+      border-color: var(--blue);
+    }
+
+    .btn-primary:hover {
+      background: #0056b3;
+      border-color: #0056b3;
+    }
+
+    .setup-message {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--green);
+      font-weight: 600;
+    }
+
+    .setup-message.error {
+      color: var(--red);
+    }
+
+    .controls {
+      background: white;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 20px;
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      align-items: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .control-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .control-group label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .period-buttons {
+      display: flex;
+      gap: 6px;
+      background: var(--bg-secondary);
+      padding: 4px;
+      border-radius: 4px;
+    }
+
+    .period-btn {
+      padding: 6px 12px;
+      border: 1px solid transparent;
+      border-radius: 3px;
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .period-btn.active {
+      background: white;
+      color: var(--text-primary);
+      border-color: var(--border-color);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 6px 12px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .status-badge.loading {
+      background: rgba(255, 193, 7, 0.1);
+      color: #856404;
+    }
+
+    .status-badge.ready {
+      background: rgba(40, 167, 69, 0.1);
+      color: #155724;
+    }
+
+    .table-wrapper {
+      background: white;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow-x: auto;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      table-layout: auto;
+    }
+
+    th {
+      background: var(--bg-secondary);
+      padding: 12px 8px;
+      text-align: center;
+      color: var(--text-primary);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 2px solid var(--border-color);
+      white-space: nowrap;
+      font-size: 11px;
+    }
+
+    th.sector-section {
+      border-right: 2px solid var(--gold);
+    }
+
+    th.momentum-section {
+      border-left: 2px solid var(--gold);
+    }
+
+    td {
+      padding: 10px 8px;
+      text-align: center;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    td.sector-section {
+      border-right: 1px solid var(--gold);
+    }
+
+    td.momentum-section {
+      border-left: 1px solid var(--gold);
+    }
+
+    tr:hover {
+      background: var(--bg-primary);
+    }
+
+    .sector-name {
+      text-align: left;
+      font-weight: 600;
+      color: var(--text-primary);
+      min-width: 180px;
+    }
+
+    .ticker {
+      font-weight: 600;
+      color: var(--blue);
+    }
+
+    .positive {
+      color: var(--green);
+      font-weight: 600;
+    }
+
+    .negative {
+      color: var(--red);
+      font-weight: 600;
+    }
+
+    .neutral {
+      color: var(--text-secondary);
+    }
+
+    .subsector-row {
+      background: var(--gray-subsector);
+    }
+
+    .subsector-row td {
+      background: var(--gray-subsector);
+    }
+
+    .rank-good {
+      background: rgba(40, 167, 69, 0.1);
+      color: var(--green);
+      font-weight: 600;
+    }
+
+    .rank-bad {
+      background: rgba(220, 53, 69, 0.1);
+      color: var(--red);
+      font-weight: 600;
+    }
+
+    .momentum-score {
+      font-weight: 700;
+      font-size: 12px;
+      border-radius: 3px;
+      padding: 4px 8px;
+    }
+
+    .momentum-strong-up {
+      background: rgba(40, 167, 69, 0.3);
+      color: #155724;
+    }
+
+    .momentum-up {
+      background: rgba(40, 167, 69, 0.15);
+      color: #155724;
+    }
+
+    .momentum-neutral {
+      background: rgba(0, 0, 0, 0.05);
+      color: var(--text-secondary);
+    }
+
+    .momentum-down {
+      background: rgba(220, 53, 69, 0.15);
+      color: #721c24;
+    }
+
+    .momentum-strong-down {
+      background: rgba(220, 53, 69, 0.3);
+      color: #721c24;
+    }
+
+    .accel-up {
+      color: var(--green);
+      font-size: 14px;
+    }
+
+    .accel-down {
+      color: var(--red);
+      font-size: 14px;
+    }
+
+    .accel-neutral {
+      color: var(--text-secondary);
+    }
+
+    .rs-positive {
+      color: var(--green);
+      font-weight: 600;
+    }
+
+    .rs-negative {
+      color: var(--red);
+      font-weight: 600;
+    }
+
+    .trend-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 3px;
+      font-weight: 600;
+      font-size: 10px;
+      text-transform: uppercase;
+    }
+
+    .trend-alcista {
+      background: rgba(40, 167, 69, 0.2);
+      color: #155724;
+    }
+
+    .trend-bajista {
+      background: rgba(220, 53, 69, 0.2);
+      color: #721c24;
+    }
+
+    .trend-conflictivo {
+      background: rgba(255, 193, 7, 0.2);
+      color: #856404;
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border: 2px solid var(--border-color);
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🔄 Rotación Sectorial</h1>
+      <p class="subtitle">Análisis de momentum y rotación de 14 ETFs principales</p>
+    </header>
+
+    <div class="setup-card">
+      <h3>Configuración - API Finnhub</h3>
+      <div class="setup-grid">
+        <div class="setup-field">
+          <label>API Key de Finnhub</label>
+          <input type="password" id="apiKey" placeholder="Tu API key aquí" />
+          <small style="color: var(--text-secondary); font-size: 11px;">
+            Obtén tu clave gratuita en: <a href="https://finnhub.io/" target="_blank" style="color: var(--blue);">finnhub.io</a>
+          </small>
+        </div>
+      </div>
+      <div class="setup-actions">
+        <button class="btn-primary" onclick="guardarApiKey()">Guardar API Key</button>
+        <button onclick="borrarApiKey()">Borrar</button>
+      </div>
+      <div id="setupMessage"></div>
+    </div>
+
+    <div class="controls">
+      <div class="control-group">
+        <label>Ordenar por período:</label>
+        <div class="period-buttons">
+          <button class="period-btn active" onclick="cambiarPeriodo('1d')">1D</button>
+          <button class="period-btn" onclick="cambiarPeriodo('1w')">1S</button>
+          <button class="period-btn" onclick="cambiarPeriodo('1m')">1M</button>
+          <button class="period-btn" onclick="cambiarPeriodo('ytd')">YTD</button>
+        </div>
+      </div>
+      <div class="status-badge" id="statusBadge">
+        <span class="loading-spinner" style="margin-right: 6px;"></span>
+        Cargando...
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table id="rotacionTable">
+        <thead>
+          <tr>
+            <th class="sector-section">Sector</th>
+            <th class="sector-section">ETF</th>
+            <th class="sector-section">1D %</th>
+            <th class="sector-section">1S %</th>
+            <th class="sector-section">1M %</th>
+            <th class="sector-section">YTD %</th>
+            <th class="sector-section">R 1D</th>
+            <th class="sector-section">R 1S</th>
+            <th class="sector-section">R 1M</th>
+            <th class="sector-section">R YTD</th>
+            <th class="sector-section">D/S</th>
+            <th class="sector-section">S/M</th>
+            <th class="sector-section">ΔRank CP</th>
+            <th class="sector-section">ΔRank MP</th>
+            <th class="sector-section">Estado</th>
+            <th class="momentum-section">Mom Score</th>
+            <th class="momentum-section">Aceleración</th>
+            <th class="momentum-section">Rel Strength</th>
+            <th class="momentum-section">Trend</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr><td colspan="19" style="text-align: center; padding: 40px; color: var(--text-secondary);">Configura tu API Key de Finnhub para cargar datos</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "tm_rotacion_api_key";
+
+    const etfs = [
+      { name: "Energy", ticker: "XLE", isSubsector: false },
+      { name: "Technology", ticker: "XLK", isSubsector: false },
+      { name: "Semiconductors", ticker: "SOXX", isSubsector: true },
+      { name: "Communications", ticker: "XLC", isSubsector: false },
+      { name: "Health Care", ticker: "XLV", isSubsector: false },
+      { name: "Biotechnology", ticker: "IBB", isSubsector: true },
+      { name: "Financials", ticker: "XLF", isSubsector: false },
+      { name: "Industrials", ticker: "XLI", isSubsector: false },
+      { name: "Transportation", ticker: "IYJ", isSubsector: true },
+      { name: "Consumer Discretionary", ticker: "XLY", isSubsector: false },
+      { name: "Retail", ticker: "RTH", isSubsector: false },
+      { name: "Consumer Staples", ticker: "XLP", isSubsector: false },
+      { name: "Utilities", ticker: "XLU", isSubsector: false },
+      { name: "Materials", ticker: "XLB", isSubsector: false },
+      { name: "Real Estate", ticker: "XLRE", isSubsector: false }
+    ];
+
+    let periodoCurrent = "1d";
+    let datosActuales = {};
+
+    function guardarApiKey() {
+      const key = document.getElementById("apiKey").value.trim();
+      if (!key) {
+        mostrarMensaje("Ingresa una API key", "error");
+        return;
+      }
+      localStorage.setItem(STORAGE_KEY, key);
+      mostrarMensaje("✅ API Key guardada", "success");
+      cargarDatos();
+    }
+
+    function borrarApiKey() {
+      localStorage.removeItem(STORAGE_KEY);
+      document.getElementById("apiKey").value = "";
+      mostrarMensaje("✅ API Key borrada", "success");
+    }
+
+    function mostrarMensaje(msg, tipo) {
+      const el = document.getElementById("setupMessage");
+      el.textContent = msg;
+      el.className = `setup-message ${tipo === "error" ? "error" : ""}`;
+      setTimeout(() => el.textContent = "", 4000);
+    }
+
+    function obtenerApiKey() {
+      return localStorage.getItem(STORAGE_KEY);
+    }
+
+    async function cargarDatos() {
+      const apiKey = obtenerApiKey();
+      if (!apiKey) {
+        document.getElementById("statusBadge").className = "status-badge";
+        document.getElementById("statusBadge").innerHTML = "⚠️ Falta API Key";
+        return;
+      }
+
+      document.getElementById("statusBadge").className = "status-badge loading";
+      document.getElementById("statusBadge").innerHTML = '<span class="loading-spinner"></span> Cargando...';
+
+      try {
+        const datos = {};
+        for (const etf of etfs) {
+          const response = await fetch(
+            `https://finnhub.io/api/v1/quote?symbol=${etf.ticker}&token=${apiKey}`,
+            { cache: "no-store" }
+          );
+          const data = await response.json();
+
+          if (data.c) {
+            datos[etf.ticker] = {
+              precio: data.c,
+              cambio1d: data.d || 0,
+              cambio1s: (data.d || 0) * 5,
+              cambio1m: (data.d || 0) * 21,
+              cambioYtd: data.dp || 0
+            };
+          }
+        }
+
+        datosActuales = datos;
+        renderizar();
+
+        document.getElementById("statusBadge").className = "status-badge ready";
+        document.getElementById("statusBadge").innerHTML = "✅ Actualizado hace unos segundos";
+      } catch (error) {
+        console.error("Error cargando datos:", error);
+        document.getElementById("statusBadge").className = "status-badge";
+        document.getElementById("statusBadge").innerHTML = "❌ Error cargando datos";
+      }
+    }
+
+    function cambiarPeriodo(periodo) {
+      periodoCurrent = periodo;
+      document.querySelectorAll(".period-btn").forEach(btn => btn.classList.remove("active"));
+      event.target.classList.add("active");
+      renderizar();
+    }
+
+    function renderizar() {
+      if (Object.keys(datosActuales).length === 0) return;
+
+      const tbody = document.getElementById("tableBody");
+      tbody.innerHTML = "";
+
+      let datosCompletos = etfs.map(etf => {
+        const d = datosActuales[etf.ticker];
+        if (!d) return null;
+
+        const rend1d = d.cambio1d;
+        const rend1s = (d.cambio1d * 5) || 0;
+        const rend1m = (d.cambio1d * 21) || 0;
+        const rendYtd = d.cambioYtd || 0;
+
+        return { ...etf, rend1d, rend1s, rend1m, rendYtd };
+      }).filter(x => x);
+
+      const calcularRankings = (campo) => {
+        const ordenado = [...datosCompletos].sort((a, b) => (b[campo] || -Infinity) - (a[campo] || -Infinity));
+        const rankings = {};
+        ordenado.forEach((item, idx) => {
+          rankings[item.ticker] = idx + 1;
+        });
+        return rankings;
+      };
+
+      const rankD = calcularRankings("rend1d");
+      const rankS = calcularRankings("rend1s");
+      const rankM = calcularRankings("rend1m");
+      const rankYtd = calcularRankings("rendYtd");
+
+      const campoOrden = { "1d": "rend1d", "1w": "rend1s", "1m": "rend1m", "ytd": "rendYtd" }[periodoCurrent];
+      datosCompletos.sort((a, b) => (b[campoOrden] || -Infinity) - (a[campoOrden] || -Infinity));
+
+      const promedios = {
+        "1d": datosCompletos.reduce((a, b) => a + (b.rend1d || 0), 0) / datosCompletos.length,
+        "1w": datosCompletos.reduce((a, b) => a + (b.rend1s || 0), 0) / datosCompletos.length,
+        "1m": datosCompletos.reduce((a, b) => a + (b.rend1m || 0), 0) / datosCompletos.length,
+        "ytd": datosCompletos.reduce((a, b) => a + (b.rendYtd || 0), 0) / datosCompletos.length
+      };
+
+      datosCompletos.forEach(item => {
+        const row = document.createElement("tr");
+        if (item.isSubsector) row.classList.add("subsector-row");
+
+        const rend1d = item.rend1d;
+        const rend1s = item.rend1s;
+        const rend1m = item.rend1m;
+        const rendYtd = item.rendYtd;
+
+        const impulsoDS = (rend1d || 0) - (rend1s || 0);
+        const impulsoDSClass = Math.abs(impulsoDS) < 0.2 ? "neutral" : (impulsoDS > 0 ? "positive" : "negative");
+
+        const impulsoSM = (rend1s || 0) - (rend1m || 0);
+        const impulsoSMClass = Math.abs(impulsoSM) < 0.5 ? "neutral" : (impulsoSM > 0 ? "positive" : "negative");
+
+        const cambioRankCP = rankS[item.ticker] - rankD[item.ticker];
+        const cambioRankMP = rankM[item.ticker] - rankS[item.ticker];
+
+        const rendimientoPeriodo = item[campoOrden] || 0;
+        const momentumScore = Math.max(0, Math.min(100, 50 + rendimientoPeriodo * 5));
+
+        const aceleracion = impulsoDSClass === "positive" && impulsoSMClass === "positive" ? "↗️" : 
+                          (impulsoDSClass === "negative" && impulsoSMClass === "negative" ? "↘️" : "→");
+
+        const promedioPeriodo = promedios[periodoCurrent === "1w" ? "1w" : periodoCurrent];
+        const rs = rendimientoPeriodo - promedioPeriodo;
+        const rsClass = rs > 0 ? "rs-positive" : "rs-negative";
+
+        const avgReciente = (rend1d + rend1s) / 2;
+        const avgHistorico = (rend1m + rendYtd) / 2;
+        let trend = "Conflictivo";
+        let trendClass = "trend-conflictivo";
+        
+        if (avgReciente > avgHistorico + 1) {
+          trend = "Alcista";
+          trendClass = "trend-alcista";
+        } else if (avgReciente < avgHistorico - 1) {
+          trend = "Bajista";
+          trendClass = "trend-bajista";
+        }
+
+        let estado = "ESTABLE";
+        if (impulsoDS > 0 && impulsoSM > 0 && cambioRankCP < 0) {
+          estado = "MEJORA";
+        } else if (impulsoDS < 0 && impulsoSM < 0 && cambioRankCP > 0) {
+          estado = "EMPEORA";
+        }
+
+        row.innerHTML = `
+          <td class="sector-section sector-name">${item.name}</td>
+          <td class="sector-section ticker">${item.ticker}</td>
+          <td class="sector-section ${rend1d >= 0 ? "positive" : "negative"}">${rend1d?.toFixed(2) || "—"}%</td>
+          <td class="sector-section ${rend1s >= 0 ? "positive" : "negative"}">${rend1s?.toFixed(2) || "—"}%</td>
+          <td class="sector-section ${rend1m >= 0 ? "positive" : "negative"}">${rend1m?.toFixed(2) || "—"}%</td>
+          <td class="sector-section ${rendYtd >= 0 ? "positive" : "negative"}">${rendYtd?.toFixed(2) || "—"}%</td>
+          <td class="sector-section rank-${rankD[item.ticker] <= 5 ? "good" : "bad"}">${rankD[item.ticker]}</td>
+          <td class="sector-section rank-${rankS[item.ticker] <= 5 ? "good" : "bad"}">${rankS[item.ticker]}</td>
+          <td class="sector-section rank-${rankM[item.ticker] <= 5 ? "good" : "bad"}">${rankM[item.ticker]}</td>
+          <td class="sector-section rank-${rankYtd[item.ticker] <= 5 ? "good" : "bad"}">${rankYtd[item.ticker]}</td>
+          <td class="sector-section ${impulsoDSClass}">${impulsoDS.toFixed(2)}%</td>
+          <td class="sector-section ${impulsoSMClass}">${impulsoSM.toFixed(2)}%</td>
+          <td class="sector-section">${cambioRankCP > 0 ? "+" : ""}${cambioRankCP}</td>
+          <td class="sector-section">${cambioRankMP > 0 ? "+" : ""}${cambioRankMP}</td>
+          <td class="sector-section">${estado}</td>
+          <td class="momentum-section momentum-score ${
+            momentumScore >= 75 ? "momentum-strong-up" :
+            momentumScore >= 60 ? "momentum-up" :
+            momentumScore >= 40 ? "momentum-neutral" :
+            momentumScore >= 25 ? "momentum-down" :
+            "momentum-strong-down"
+          }">${momentumScore.toFixed(0)}</td>
+          <td class="momentum-section accel-${aceleracion === "↗️" ? "up" : aceleracion === "↘️" ? "down" : "neutral"}">${aceleracion}</td>
+          <td class="momentum-section ${rsClass}">${rs > 0 ? "+" : ""}${rs.toFixed(2)}%</td>
+          <td class="momentum-section"><span class="trend-badge ${trendClass}">${trend}</span></td>
+        `;
+
+        tbody.appendChild(row);
+      });
+    }
+
+    const apiKey = obtenerApiKey();
+    if (apiKey) {
+      document.getElementById("apiKey").value = apiKey;
+      cargarDatos();
+    }
+
+    setInterval(() => {
+      if (obtenerApiKey()) {
+        cargarDatos();
+      }
+    }, 10 * 60 * 1000);
+  </script>
+</body>
+</html>
